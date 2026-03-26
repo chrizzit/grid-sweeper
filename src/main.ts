@@ -292,7 +292,7 @@ restartBtn.addEventListener('click', initGame);
 if (restartWrapper) restartWrapper.addEventListener('click', initGame);
 
 function saveScore(time: number): void {
-    const key = `minesweeper_scores_${currentDifficulty}`;
+    const key = `gridsweeper_scores_${currentDifficulty}`;
     let scores: Score[] = JSON.parse(localStorage.getItem(key) || '[]');
     const date = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
     scores.push({ time, date });
@@ -303,7 +303,7 @@ function saveScore(time: number): void {
 }
 
 function renderLeaderboard(): void {
-    const key = `minesweeper_scores_${currentDifficulty}`;
+    const key = `gridsweeper_scores_${currentDifficulty}`;
     let scores: Score[] = JSON.parse(localStorage.getItem(key) || '[]');
     leaderboardListElement.innerHTML = '';
     
