@@ -1,4 +1,5 @@
 import './pwa';
+import { CellData, createBoard, placeMines, checkWinCondition, revealCellLogic } from './logic';
 
 interface Difficulty {
     w: number;
@@ -6,13 +7,7 @@ interface Difficulty {
     m: number;
 }
 
-interface Cell {
-    x: number;
-    y: number;
-    isMine: boolean;
-    isRevealed: boolean;
-    isFlagged: boolean;
-    neighborMines: number;
+interface Cell extends CellData {
     element: HTMLDivElement;
 }
 
@@ -66,8 +61,6 @@ function vibrate(pattern: number | number[]): void {
 }
 
 function initGame(): void {
-    board = [];
-    mines = [];
     gameOver = false;
     firstClick = true;
     cellsRevealed = 0;
@@ -84,46 +77,47 @@ function initGame(): void {
     document.documentElement.style.setProperty('--board-width', BOARD_WIDTH.toString());
     document.documentElement.style.setProperty('--board-height', BOARD_HEIGHT.toString());
     
+    const logicalBoard = createBoard(BOARD_WIDTH, BOARD_HEIGHT);
+    board = [];
+    mines = [];
+
     for (let y = 0; y < BOARD_HEIGHT; y++) {
         const row: Cell[] = [];
         for (let x = 0; x < BOARD_WIDTH; x++) {
+            const cellData = logicalBoard[y][x];
             const cellElement = document.createElement('div');
-            const cellData: Cell = {
-                x, y,
-                isMine: false,
-                isRevealed: false,
-                isFlagged: false,
-                neighborMines: 0,
+            const cell: Cell = {
+                ...cellData,
                 element: cellElement
             };
             
-            cellData.element.classList.add('cell');
-            cellData.element.dataset.x = x.toString();
-            cellData.element.dataset.y = y.toString();
+            cell.element.classList.add('cell');
+            cell.element.dataset.x = x.toString();
+            cell.element.dataset.y = y.toString();
             
-            cellData.element.addEventListener('mousedown', (e) => handleCellMouseDown(e, cellData));
-            cellData.element.addEventListener('mouseup', (e) => handleCellMouseUp(e, cellData));
-            cellData.element.addEventListener('contextmenu', (e) => {
+            cell.element.addEventListener('mousedown', (e) => handleCellMouseDown(e, cell));
+            cell.element.addEventListener('mouseup', (e) => handleCellMouseUp(e, cell));
+            cell.element.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
-                toggleFlag(cellData);
+                toggleFlag(cell);
             });
-            cellData.element.addEventListener('mouseleave', () => {
+            cell.element.addEventListener('mouseleave', () => {
                 if (!gameOver) restartBtn.textContent = FACES.normal;
             });
 
             // Touch events for mobile support
-            cellData.element.addEventListener('touchstart', (e) => handleCellTouchStart(e, cellData), { passive: false });
-            cellData.element.addEventListener('touchend', (e) => handleCellTouchEnd(e, cellData));
-            cellData.element.addEventListener('touchmove', () => {
+            cell.element.addEventListener('touchstart', (e) => handleCellTouchStart(e, cell), { passive: false });
+            cell.element.addEventListener('touchend', (e) => handleCellTouchEnd(e, cell));
+            cell.element.addEventListener('touchmove', () => {
                 if (touchTimer) {
                     clearTimeout(touchTimer);
                     touchTimer = null;
                 }
-                cellData.element.classList.remove('touch-active');
+                cell.element.classList.remove('touch-active');
             });
 
-            boardElement.appendChild(cellData.element);
-            row.push(cellData);
+            boardElement.appendChild(cell.element);
+            row.push(cell);
         }
         board.push(row);
     }
@@ -185,50 +179,7 @@ function handleCellTouchEnd(_e: TouchEvent, cellData: Cell): void {
     }
 }
 
-function placeMines(firstClickX: number, firstClickY: number): void {
-    let minesPlaced = 0;
-    while (minesPlaced < MINES_COUNT) {
-        const x = Math.floor(Math.random() * BOARD_WIDTH);
-        const y = Math.floor(Math.random() * BOARD_HEIGHT);
-        
-        const isSafeZone = Math.abs(x - firstClickX) <= 1 && Math.abs(y - firstClickY) <= 1;
-        
-        if (!board[y][x].isMine && !isSafeZone) {
-            board[y][x].isMine = true;
-            mines.push(board[y][x]);
-            minesPlaced++;
-        }
-    }
-    calculateNeighbors();
-}
-
-function calculateNeighbors(): void {
-    for (let y = 0; y < BOARD_HEIGHT; y++) {
-        for (let x = 0; x < BOARD_WIDTH; x++) {
-            if (board[y][x].isMine) continue;
-            let count = 0;
-            getNeighbors(x, y).forEach(n => {
-                if (n.isMine) count++;
-            });
-            board[y][x].neighborMines = count;
-        }
-    }
-}
-
-function getNeighbors(x: number, y: number): Cell[] {
-    const neighbors: Cell[] = [];
-    for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-            if (dx === 0 && dy === 0) continue;
-            const nx = x + dx;
-            const ny = y + dy;
-            if (nx >= 0 && nx < BOARD_WIDTH && ny >= 0 && ny < BOARD_HEIGHT) {
-                neighbors.push(board[ny][nx]);
-            }
-        }
-    }
-    return neighbors;
-}
+// Logic moved to logic.ts
 
 function toggleFlag(cellData: Cell): void {
     if (gameOver || cellData.isRevealed) return;
@@ -270,7 +221,8 @@ function revealCell(cellData: Cell): void {
 
     if (firstClick) {
         firstClick = false;
-        placeMines(cellData.x, cellData.y);
+        const placedMines = placeMines(board, MINES_COUNT, cellData.x, cellData.y);
+        mines = placedMines as Cell[]; // Cast to Cell[] as it now has element pointers from board
         startTimer();
         vibrate(30);
     }
@@ -282,38 +234,23 @@ function revealCell(cellData: Cell): void {
         return;
     }
 
-    // Flood fill logic
-    const queue: Cell[] = [cellData];
-    while (queue.length > 0) {
-        const current = queue.shift();
-        if (!current) continue;
-        
-        if (current.isRevealed || current.isFlagged) continue;
-        
-        current.isRevealed = true;
-        current.element.classList.add('revealed');
-        cellsRevealed++;
-
-        if (current.neighborMines > 0) {
-            current.element.textContent = current.neighborMines.toString();
-            current.element.dataset.num = current.neighborMines.toString();
-        } else {
-            getNeighbors(current.x, current.y).forEach(n => {
-                if (!n.isRevealed && !n.isFlagged && !n.isMine) {
-                    queue.push(n);
-                }
-            });
+    const revealed = revealCellLogic(board, cellData);
+    revealed.forEach(c => {
+        const cell = c as Cell;
+        cell.element.classList.add('revealed');
+        if (cell.neighborMines > 0) {
+            cell.element.textContent = cell.neighborMines.toString();
+            cell.element.dataset.num = cell.neighborMines.toString();
         }
-    }
+        cellsRevealed++;
+    });
 
-    checkWinCondition();
-}
-
-function checkWinCondition(): void {
-    if (cellsRevealed === (BOARD_WIDTH * BOARD_HEIGHT) - MINES_COUNT) {
+    if (checkWinCondition(board, MINES_COUNT)) {
         triggerGameOver(true);
     }
 }
+
+// Logic moved to logic.ts
 
 function triggerGameOver(isWin: boolean): void {
     gameOver = true;

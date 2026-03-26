@@ -28,6 +28,9 @@ npm install
 # Run dev server
 npm run dev
 
+# Run automated tests
+npm test
+
 # Build for production
 npm run build
 ```
