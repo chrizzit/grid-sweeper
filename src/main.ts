@@ -1,4 +1,5 @@
 import './pwa';
+import { initAnalytics, trackEvent } from './analytics';
 import { CellData, createBoard, placeMines, checkWinCondition, revealCellLogic } from './logic';
 
 interface Difficulty {
@@ -67,6 +68,11 @@ function initGame(): void {
     uiTimer = 0;
     flagsPlaced = 0;
     
+    // Track game start
+    trackEvent('game_start', {
+        difficulty: currentDifficulty,
+        mines: MINES_COUNT
+    });
     if (timerInterval) clearInterval(timerInterval);
     timerElement.textContent = '000';
     updateMineCount();
@@ -271,9 +277,22 @@ function triggerGameOver(isWin: boolean): void {
             saveScore(uiTimer);
         }
         vibrate([50, 100, 50, 100, 50]);
+        
+        // Track game win
+        trackEvent('game_won', {
+            difficulty: currentDifficulty,
+            time: uiTimer,
+            mines: MINES_COUNT
+        });
     } else {
         restartBtn.textContent = FACES.lose;
         vibrate([100, 50, 100]);
+        // Track game loss
+        trackEvent('game_lost', {
+            difficulty: currentDifficulty,
+            time: uiTimer,
+            mines: MINES_COUNT
+        });
         mines.forEach(m => {
             if (!m.isRevealed && !m.isFlagged) {
                 m.element.classList.add('revealed');
@@ -376,6 +395,11 @@ closeSettingsBtn.addEventListener('click', () => {
         initGame();
         renderLeaderboard();
         vibrate(40);
+        
+        // Track difficulty change
+        trackEvent('difficulty_change', {
+            difficulty: newDiff
+        });
     }
 });
 
@@ -387,6 +411,11 @@ themeBtn.addEventListener('click', () => {
     currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = currentTheme;
     vibrate(20);
+    
+    // Track theme toggle
+    trackEvent('theme_toggle', {
+        theme: currentTheme
+    });
 });
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
@@ -396,3 +425,4 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
 
 renderLeaderboard();
 initGame();
+initAnalytics();
