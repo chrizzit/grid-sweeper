@@ -347,7 +347,7 @@ h1 {
 
 .cell.flagged::after {
     content: '🚩';
-    font-size: 1.25rem;
+    font-size: calc(var(--cell-size) * 0.6);
     animation: flag-plant 0.2s ease-out;
 }
 
