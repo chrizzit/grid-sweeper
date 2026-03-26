@@ -7,7 +7,7 @@
  * 3. Replace the placeholder below with your actual ID.
  */
 
-const GA_MEASUREMENT_ID = 'G-MX5T39HCKR'; // Updated with user's real ID
+const GA_MEASUREMENT_ID = 'G-9E6C4R31DW'; // Updated with the correct account ID
 
 /**
  * Initialize Google Analytics
