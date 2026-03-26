@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Sweeper</title>
+    <meta name="description" content="A modern, premium grid-clearing game.">
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <div class="top-bar">
+                <h1>Grid Sweeper</h1>
+                <div class="controls">
+                    <button id="theme-btn" class="icon-btn" title="Toggle Light/Dark Theme">🌓</button>
+                    <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat-box" id="mine-count" title="Mines Remaining">010</div>
+                <div class="restart-wrapper" id="restart-wrapper" title="Click to Restart Game">
+                    <button id="restart-btn" class="face-btn">😊</button>
+                    <span class="restart-label">RESTART</span>
+                </div>
+                <div class="stat-box" id="timer" title="Time Elapsed">000</div>
+            </div>
+        </header>
+        <main>
+            <div id="board" class="board"></div>
+        </main>
+        <div class="leaderboard-section">
+            <h2>Personal Best Times 🏆</h2>
+            <ol id="leaderboard-list"></ol>
+            <p id="no-scores-msg" class="empty-msg">No games won yet. Be the first!</p>
+        </div>
+        <footer>
+            <div class="controls-hint">
+                <span>🖱️ Left Click: Reveal</span>
+                <span>🖱️ Right Click: Flag</span>
+            </div>
+        </footer>
+    </div>
+    
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Game Settings</h2>
+            
+            <div class="setting-group">
+                <label for="difficulty-select">Select Difficulty:</label>
+                <select id="difficulty-select">
+                    <option value="beginner">Beginner (10x10, 10 Mines)</option>
+                    <option value="intermediate">Intermediate (16x16, 40 Mines)</option>
+                    <option value="expert">Expert (30x16, 99 Mines)</option>
+                </select>
+            </div>
+            
+            <button id="close-settings" class="primary-btn">Save & Restart Game</button>
+        </div>
+    </div>
+    
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
