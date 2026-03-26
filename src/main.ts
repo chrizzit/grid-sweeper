@@ -40,6 +40,9 @@ let cellsRevealed = 0;
 let uiTimer = 0;
 let timerInterval: number | null = null;
 let flagsPlaced = 0;
+let flagModeActive = false;
+let touchTimer: number | null = null;
+let longPressTriggered = false;
 
 const boardElement = document.getElementById('board') as HTMLDivElement;
 const mineCountElement = document.getElementById('mine-count') as HTMLDivElement;
@@ -102,6 +105,17 @@ function initGame(): void {
                 if (!gameOver) restartBtn.textContent = FACES.normal;
             });
 
+            // Touch events for mobile support
+            cellData.element.addEventListener('touchstart', (e) => handleCellTouchStart(e, cellData), { passive: false });
+            cellData.element.addEventListener('touchend', (e) => handleCellTouchEnd(e, cellData));
+            cellData.element.addEventListener('touchmove', () => {
+                if (touchTimer) {
+                    clearTimeout(touchTimer);
+                    touchTimer = null;
+                }
+                cellData.element.classList.remove('touch-active');
+            });
+
             boardElement.appendChild(cellData.element);
             row.push(cellData);
         }
@@ -117,7 +131,52 @@ function handleCellMouseDown(e: MouseEvent, cellData: Cell): void {
 function handleCellMouseUp(e: MouseEvent, cellData: Cell): void {
     if (gameOver || cellData.isRevealed || cellData.isFlagged || e.button !== 0) return;
     restartBtn.textContent = FACES.normal;
-    revealCell(cellData);
+    
+    if (flagModeActive) {
+        toggleFlag(cellData);
+    } else {
+        revealCell(cellData);
+    }
+}
+
+function handleCellTouchStart(e: TouchEvent, cellData: Cell): void {
+    if (gameOver || cellData.isRevealed) return;
+    
+    // Check if it's a single touch
+    if (e.touches.length > 1) return;
+    
+    // Prevent default to avoid scrolling while long-pressing
+    // Only if not revealed to allow scrolling elsewhere
+    longPressTriggered = false;
+    cellData.element.classList.add('touch-active');
+    
+    touchTimer = window.setTimeout(() => {
+        toggleFlag(cellData);
+        longPressTriggered = true;
+        touchTimer = null;
+        cellData.element.classList.remove('touch-active');
+        if (window.navigator.vibrate) window.navigator.vibrate(50);
+    }, 500);
+}
+
+function handleCellTouchEnd(_e: TouchEvent, cellData: Cell): void {
+    let wasActiveTouch = !!touchTimer;
+    
+    if (touchTimer) {
+        clearTimeout(touchTimer);
+        touchTimer = null;
+    }
+    cellData.element.classList.remove('touch-active');
+    
+    if (gameOver || cellData.isRevealed) return;
+    
+    if (!longPressTriggered && wasActiveTouch) {
+        if (flagModeActive) {
+            toggleFlag(cellData);
+        } else {
+            revealCell(cellData);
+        }
+    }
 }
 
 function placeMines(firstClickX: number, firstClickY: number): void {
@@ -333,9 +392,15 @@ function renderLeaderboard(): void {
 
 const settingsBtn = document.getElementById('settings-btn') as HTMLButtonElement;
 const themeBtn = document.getElementById('theme-btn') as HTMLButtonElement;
+const flagModeBtn = document.getElementById('flag-mode-btn') as HTMLButtonElement;
 const settingsModal = document.getElementById('settings-modal') as HTMLDivElement;
 const closeSettingsBtn = document.getElementById('close-settings') as HTMLButtonElement;
 const difficultySelect = document.getElementById('difficulty-select') as HTMLSelectElement;
+
+flagModeBtn.addEventListener('click', () => {
+    flagModeActive = !flagModeActive;
+    flagModeBtn.classList.toggle('active', flagModeActive);
+});
 
 settingsBtn.addEventListener('click', () => {
     settingsModal.classList.remove('hidden');

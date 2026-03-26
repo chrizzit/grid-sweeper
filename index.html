@@ -16,6 +16,7 @@
             <div class="top-bar">
                 <h1>Grid Sweeper</h1>
                 <div class="controls">
+                    <button id="flag-mode-btn" class="icon-btn" title="Toggle Flag Mode (Touch)">🚩</button>
                     <button id="theme-btn" class="icon-btn" title="Toggle Light/Dark Theme">🌓</button>
                     <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
                 </div>
@@ -39,8 +40,14 @@
         </div>
         <footer>
             <div class="controls-hint">
-                <span>🖱️ Left Click: Reveal</span>
-                <span>🖱️ Right Click: Flag</span>
+                <div class="desktop-hints">
+                    <span>🖱️ Left Click: Reveal</span>
+                    <span>🖱️ Right Click: Flag</span>
+                </div>
+                <div class="touch-hints">
+                    <span>👆 Tap: Reveal/Flag (Toggle)</span>
+                    <span>⌛ Long Press: Flag</span>
+                </div>
             </div>
         </footer>
     </div>
