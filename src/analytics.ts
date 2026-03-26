@@ -1,44 +1,9 @@
 /**
  * Google Analytics 4 (GA4) Utility for Grid Sweeper
  * 
- * To set up your own tracking:
- * 1. Go to https://analytics.google.com/
- * 2. Create a GA4 property and get your Measurement ID (e.g., G-XXXXXXXXXX)
- * 3. Replace the placeholder below with your actual ID.
+ * Note: The GA4 initialization script is included directly in index.html.
+ * This file provides a typed helper for sending custom events.
  */
-
-const GA_MEASUREMENT_ID = 'G-9E6C4R31DW'; // Updated with the correct account ID
-
-/**
- * Initialize Google Analytics
- */
-export function initAnalytics(): void {
-    // Check if script is already loaded
-    if (document.getElementById('ga-script')) return;
-
-    // Add GA4 gtag.js script
-    const script = document.createElement('script');
-    script.id = 'ga-script';
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-    document.head.appendChild(script);
-
-    // Initialize gtag function
-    window.dataLayer = window.dataLayer || [];
-    function gtag(...args: any[]) {
-        window.dataLayer.push(args);
-    }
-    
-    // @ts-ignore
-    window.gtag = gtag;
-    
-    gtag('js', new Date());
-    gtag('config', GA_MEASUREMENT_ID, {
-        send_page_view: true,
-        cookie_domain: 'auto',
-        cookie_flags: 'SameSite=None;Secure'
-    });
-}
 
 /**
  * Track a custom event
@@ -46,9 +11,7 @@ export function initAnalytics(): void {
  * @param params Optional event parameters
  */
 export function trackEvent(eventName: string, params?: object): void {
-    // @ts-ignore
-    if (typeof window.gtag === 'function') {
-        // @ts-ignore
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
         window.gtag('event', eventName, params);
     } else {
         console.debug(`Analytics: gtag not initialized, skipping event: ${eventName}`, params);
@@ -62,3 +25,4 @@ declare global {
         gtag: (...args: any[]) => void;
     }
 }
+

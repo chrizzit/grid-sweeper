@@ -1,5 +1,5 @@
 import './pwa';
-import { initAnalytics, trackEvent } from './analytics';
+import { trackEvent } from './analytics';
 import { CellData, createBoard, placeMines, checkWinCondition, revealCellLogic } from './logic';
 
 interface Difficulty {
@@ -423,6 +423,5 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
     document.documentElement.dataset.theme = currentTheme;
 });
 
-initAnalytics();
 renderLeaderboard();
 initGame();
