@@ -59,6 +59,12 @@ const FACES = {
     scared: '😮'
 } as const;
 
+function vibrate(pattern: number | number[]): void {
+    if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(pattern);
+    }
+}
+
 function initGame(): void {
     board = [];
     mines = [];
@@ -155,7 +161,7 @@ function handleCellTouchStart(e: TouchEvent, cellData: Cell): void {
         longPressTriggered = true;
         touchTimer = null;
         cellData.element.classList.remove('touch-active');
-        if (window.navigator.vibrate) window.navigator.vibrate(50);
+        vibrate(50);
     }, 500);
 }
 
@@ -237,6 +243,7 @@ function toggleFlag(cellData: Cell): void {
             cellData.element.classList.add('flagged');
             flagsPlaced++;
         }
+        vibrate(10);
     }
     updateMineCount();
 }
@@ -265,6 +272,7 @@ function revealCell(cellData: Cell): void {
         firstClick = false;
         placeMines(cellData.x, cellData.y);
         startTimer();
+        vibrate(30);
     }
 
     if (cellData.isMine) {
@@ -325,8 +333,10 @@ function triggerGameOver(isWin: boolean): void {
         if (uiTimer > 0) {
             saveScore(uiTimer);
         }
+        vibrate([50, 100, 50, 100, 50]);
     } else {
         restartBtn.textContent = FACES.lose;
+        vibrate([100, 50, 100]);
         mines.forEach(m => {
             if (!m.isRevealed && !m.isFlagged) {
                 m.element.classList.add('revealed');
@@ -347,18 +357,28 @@ function triggerGameOver(isWin: boolean): void {
     }
 }
 
-restartBtn.addEventListener('click', initGame);
-if (restartWrapper) restartWrapper.addEventListener('click', initGame);
+restartBtn.addEventListener('click', () => {
+    initGame();
+    vibrate(30);
+});
+if (restartWrapper) {
+    restartWrapper.addEventListener('click', () => {
+        initGame();
+        vibrate(30);
+    });
+}
 
 function saveScore(time: number): void {
     const key = `gridsweeper_scores_${currentDifficulty}`;
     let scores: Score[] = JSON.parse(localStorage.getItem(key) || '[]');
+    const isNewPB = scores.length === 0 || time < scores[0].time;
     const date = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
     scores.push({ time, date });
     scores.sort((a, b) => a.time - b.time);
     scores = scores.slice(0, 10);
     localStorage.setItem(key, JSON.stringify(scores));
     renderLeaderboard();
+    if (isNewPB) vibrate([30, 30, 30, 30, 30]);
 }
 
 function renderLeaderboard(): void {
@@ -400,6 +420,7 @@ const difficultySelect = document.getElementById('difficulty-select') as HTMLSel
 flagModeBtn.addEventListener('click', () => {
     flagModeActive = !flagModeActive;
     flagModeBtn.classList.toggle('active', flagModeActive);
+    vibrate(20);
 });
 
 settingsBtn.addEventListener('click', () => {
@@ -408,6 +429,7 @@ settingsBtn.addEventListener('click', () => {
 
 closeSettingsBtn.addEventListener('click', () => {
     settingsModal.classList.add('hidden');
+    vibrate(20);
     const newDiff = difficultySelect.value as keyof typeof DIFFICULTIES;
     if (newDiff !== currentDifficulty) {
         currentDifficulty = newDiff;
@@ -416,6 +438,7 @@ closeSettingsBtn.addEventListener('click', () => {
         MINES_COUNT = DIFFICULTIES[newDiff].m;
         initGame();
         renderLeaderboard();
+        vibrate(40);
     }
 });
 
@@ -426,6 +449,7 @@ document.documentElement.dataset.theme = currentTheme;
 themeBtn.addEventListener('click', () => {
     currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = currentTheme;
+    vibrate(20);
 });
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
