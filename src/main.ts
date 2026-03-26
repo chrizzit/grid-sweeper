@@ -423,6 +423,6 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
     document.documentElement.dataset.theme = currentTheme;
 });
 
+initAnalytics();
 renderLeaderboard();
 initGame();
-initAnalytics();
